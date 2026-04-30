@@ -8,7 +8,7 @@ export async function captureCamera(mediaRecorder: MediaRecorder): Promise<Media
             mediaRecorder = new MediaRecorder(stream);
         }
 
-        const videoElement = document.getElementById('preview') as HTMLVideoElement;
+        const videoElement = document.getElementById('video') as HTMLVideoElement;
         videoElement.srcObject = stream;
         const chunks: Blob[]  = [];
 
@@ -26,6 +26,6 @@ export async function captureCamera(mediaRecorder: MediaRecorder): Promise<Media
 
 export async function cameraStop(mediaRecorder: MediaRecorder) {
     mediaRecorder.stop();
-    const videoElement = document.getElementById('preview') as HTMLVideoElement;
+    const videoElement = document.getElementById('video') as HTMLVideoElement;
     videoElement.srcObject = null;
 }

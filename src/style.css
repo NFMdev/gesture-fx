@@ -182,6 +182,26 @@ code {
   }
 }
 
+.camera-stage {
+  position: relative;
+  width: 640px;
+  max-width: 100%;
+}
+
+.camera-stage video,
+.camera-stage canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+
+.camera-stage canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
 #next-steps {
   display: flex;
   border-top: 1px solid var(--border);

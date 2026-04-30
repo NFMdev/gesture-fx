@@ -3,6 +3,7 @@ import typescriptLogo from './assets/typescript.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import { cameraStop, captureCamera } from './camera'
+import { render } from './vision'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 <section id="center">
@@ -15,9 +16,9 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <button type="button" id="buttonStart">Start</button>
     <button type="button" id="buttonStop" disabled>Stop</button>
   </div>
-  <div>
-  <div>
-    <video width="640" height="360" autoplay muted playsinline id="preview"/>
+  <div class="camera-stage">
+    <video width="640" height="360" autoplay muted playsinline id="video"></video>
+    <canvas id="canvas"></canvas>
   </div>
 </section>
 
@@ -67,6 +68,7 @@ let mediaRecorder: MediaRecorder;
 
 buttonStart?.addEventListener('click', async () => {
   mediaRecorder = await captureCamera(mediaRecorder);
+  render();
   buttonStart.setAttribute('disabled', '');
   buttonStop?.removeAttribute('disabled');
 });
