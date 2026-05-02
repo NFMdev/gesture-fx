@@ -1,4 +1,4 @@
-import { DrawingUtils, FilesetResolver, HandLandmarker } from "@mediapipe/tasks-vision";
+import { DrawingUtils, FilesetResolver, HandLandmarker, type NormalizedLandmark } from "@mediapipe/tasks-vision";
 
 type VisionContext = {
   handLandmarker: HandLandmarker;
@@ -66,9 +66,15 @@ export async function render() {
   const detections = handLandmarker.detectForVideo(video, performance.now());
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.rect(0, 0, canvas.width, canvas.height);
-  ctx.clip();
+
+  const shouldBlur = detections.landmarks?.some((landmarks) => isPeaceSign(landmarks)) ?? false;
+
+  ctx.save();
+
+  ctx.filter = shouldBlur ? 'blur(5px)' : 'none';
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  ctx.restore();
 
   if (detections.landmarks) {
     for (const landmarks of detections.landmarks) {
@@ -81,10 +87,18 @@ export async function render() {
   });
 }
 
-function drawLandmarks(drawingUtils: DrawingUtils, landmarks: any[]) {
+function drawLandmarks(drawingUtils: DrawingUtils, landmarks: NormalizedLandmark[]) {
   drawingUtils.drawConnectors(landmarks, HandLandmarker.HAND_CONNECTIONS, {
     color: "#00FF00",
     lineWidth: 5,
   });
   drawingUtils.drawLandmarks(landmarks, { color: "#FF0000", lineWidth: 2 });
+}
+
+function isPeaceSign(landmarks: NormalizedLandmark[]): boolean {
+  const pinkyUp = landmarks[8].y < landmarks[6].y;
+  const indexUp = landmarks[12].y < landmarks[10].y;
+  const otherFingersDown = (landmarks[14].y < landmarks[16].y) &&
+    (landmarks[18].y < landmarks[20].y) && (landmarks[2].x > landmarks[4].x);
+  return pinkyUp && indexUp && otherFingersDown;
 }
