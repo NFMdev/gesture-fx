@@ -1,14 +1,16 @@
 import { DrawingUtils, FilesetResolver, HandLandmarker, type NormalizedLandmark } from "@mediapipe/tasks-vision";
+import { Gestures, type Gesture } from "./types/gesture";
+import type { VisionContext } from "./types/vision-context";
+import type { RuntimeState } from "./types/runtime-state";
+import { clamp, distance, inverseLerp } from "./gestures-calc";
 
-type VisionContext = {
-  handLandmarker: HandLandmarker;
-  video: HTMLVideoElement;
-  canvas: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D;
-  drawingUtils: DrawingUtils;
-};
 
 let visionContextPromise: Promise<VisionContext> | null = null;
+const runtimeState: RuntimeState = {
+  activeGesture: Gestures.None,
+  previousGesture: Gestures.None
+}
+let currentBlur = 0;
 
 async function getVisionContext(): Promise<VisionContext> {
   if (!visionContextPromise) {
@@ -40,12 +42,11 @@ async function getVisionContext(): Promise<VisionContext> {
             "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
         },
         numHands: 2,
+        runningMode: 'VIDEO'
       });
 
-      await handLandmarker.setOptions({ runningMode: "VIDEO" });
-
       return {
-        handLandmarker,
+        recognizer: handLandmarker,
         video,
         canvas,
         ctx,
@@ -58,7 +59,7 @@ async function getVisionContext(): Promise<VisionContext> {
 }
 
 export async function render() {
-  const { handLandmarker, video, canvas, ctx, drawingUtils } = await getVisionContext();
+  const { recognizer: handLandmarker, video, canvas, ctx, drawingUtils } = await getVisionContext();
 
   canvas.width = video.videoWidth || video.width;
   canvas.height = video.videoHeight || video.height;
@@ -66,12 +67,8 @@ export async function render() {
   const detections = handLandmarker.detectForVideo(video, performance.now());
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  const shouldBlur = detections.landmarks?.some((landmarks) => isPeaceSign(landmarks)) ?? false;
-
   ctx.save();
-
-  ctx.filter = shouldBlur ? 'blur(5px)' : 'none';
+  ctx.filter = `blur(${currentBlur}px)`;
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
   ctx.restore();
@@ -79,6 +76,20 @@ export async function render() {
   if (detections.landmarks) {
     for (const landmarks of detections.landmarks) {
       drawLandmarks(drawingUtils, landmarks);
+      const detectedGesture = detectActiveGesture(landmarks);
+      if (runtimeState.activeGesture !== detectedGesture) {
+        runtimeState.previousGesture = runtimeState.activeGesture;
+        runtimeState.activeGesture = detectedGesture;
+      }
+
+      switch (runtimeState.activeGesture) {
+        case Gestures.PeaceSign:
+          updateBlurFromPeaceSign(landmarks);
+          break;
+
+        default:
+          break;
+      }
     }
   }
 
@@ -101,4 +112,39 @@ function isPeaceSign(landmarks: NormalizedLandmark[]): boolean {
   const otherFingersDown = (landmarks[14].y < landmarks[16].y) &&
     (landmarks[18].y < landmarks[20].y) && (landmarks[2].x > landmarks[4].x);
   return pinkyUp && indexUp && otherFingersDown;
+}
+
+function detectActiveGesture(landmarks: NormalizedLandmark[]): Gesture {
+  if (isPeaceSign(landmarks)) {
+    return Gestures.PeaceSign;
+  }
+  return Gestures.None;
+}
+
+function updateBlurFromPeaceSign(landmarks: NormalizedLandmark[]) {
+  const targetBlur = getBlurIntensity(landmarks) * 10;
+  currentBlur += (targetBlur - currentBlur) * 0.15;
+}
+
+function getBlurIntensity(landmarks: NormalizedLandmark[]): number {
+
+  const indexTip = landmarks[8];
+  const middleTip = landmarks[12];
+
+  const wrist = landmarks[0];
+  const palmCenter = landmarks[9];
+
+  const fingerDistance = distance(indexTip, middleTip);
+  const handScale = distance(wrist, palmCenter);
+
+  if (handScale === 0) return 0;
+
+  const normalizedSeparation = fingerDistance / handScale;
+
+  const minSeparation = 0.10; // fingers practically together
+  const maxSeparation = 0.40; // fingers practically separated
+  const separationProgress = inverseLerp(minSeparation, maxSeparation, normalizedSeparation);
+  const blurIntensity = 1 - separationProgress;
+
+  return clamp(blurIntensity, 0, 1);
 }
