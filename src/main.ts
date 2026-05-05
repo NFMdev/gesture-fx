@@ -2,8 +2,8 @@ import './style.css'
 import typescriptLogo from './assets/typescript.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
-import { cameraStop, captureCamera } from './camera'
-import { render } from './vision'
+import { cameraStop, captureCamera } from './vision/camera'
+import { render } from './vision/vision'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 <section id="center">

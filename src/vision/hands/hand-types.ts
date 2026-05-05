@@ -1,5 +1,6 @@
-import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
+import type { DrawingUtils, NormalizedLandmark } from "@mediapipe/tasks-vision";
 import type { Gesture } from "../../types/gesture";
+import type { HandDetector } from "./hands-detector";
 
 export type HandSide = 'Left' | 'Right' | 'Unknown';
 
@@ -27,6 +28,14 @@ export type HandDetectionResult = {
     hands: DetectedHand[];
     activeGesture: Gesture;
     gestureIntensity: number;
-    primearyHand: DetectedHand | null;
+    primaryHand: DetectedHand | null;
     hasHands: boolean;
 }
+
+export type VisionContext = {
+  video: HTMLVideoElement;
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+  drawingUtils: DrawingUtils;
+  handDetector: HandDetector;
+};
