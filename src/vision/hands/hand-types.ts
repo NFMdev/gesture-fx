@@ -1,4 +1,4 @@
-import type { DrawingUtils, NormalizedLandmark } from "@mediapipe/tasks-vision";
+import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 import type { Gesture } from "../../types/gesture";
 
 export type HandSide = 'Left' | 'Right' | 'Unknown';
