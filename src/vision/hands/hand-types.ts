@@ -1,6 +1,5 @@
 import type { DrawingUtils, NormalizedLandmark } from "@mediapipe/tasks-vision";
 import type { Gesture } from "../../types/gesture";
-import type { HandDetector } from "./hands-detector";
 
 export type HandSide = 'Left' | 'Right' | 'Unknown';
 
