@@ -2,7 +2,7 @@ import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 import type { GestureAnalysis } from "./hand-types";
 import { Gestures } from "../../types/gesture";
 import { clamp, distance, inverseLerp, toPoint2D } from "./gestures-calc";
-import { HandConstants } from "../../../public/constants/hand-constants";
+import { HandLandmarkIndex } from "../../constants/hand-constants";
 
 export function analyzeGesture(landmarks: NormalizedLandmark[]): GestureAnalysis {
     if (isPeaceSign(landmarks)) {
@@ -42,20 +42,20 @@ export function selectActiveGesture(analyses: GestureAnalysis[]): GestureAnalysi
 }
 
 function isPeaceSign(landmarks: NormalizedLandmark[]): boolean {
-    const indexUp = isFingerUp(landmarks, HandConstants.INDEX_TIP, HandConstants.INDEX_PIP);
-    const middleUp = isFingerUp(landmarks, HandConstants.MIDDLE_TIP, HandConstants.MIDDLE_PIP);
+    const indexUp = isFingerUp(landmarks, HandLandmarkIndex.indexTip, HandLandmarkIndex.indexPip);
+    const middleUp = isFingerUp(landmarks, HandLandmarkIndex.middleTip, HandLandmarkIndex.middlePip);
 
-    const ringDown = isFingerDown(landmarks, HandConstants.RING_TIP, HandConstants.RING_PIP);
-    const pinkyDown = isFingerDown(landmarks, HandConstants.PINKY_TIP, HandConstants.PINKY_PIP);
+    const ringDown = isFingerDown(landmarks, HandLandmarkIndex.ringTip, HandLandmarkIndex.ringPip);
+    const pinkyDown = isFingerDown(landmarks, HandLandmarkIndex.pinkyTip, HandLandmarkIndex.pinkyPip);
 
     return indexUp && middleUp && ringDown && pinkyDown;
 }
 
 function isOpenPalm(landmarks: NormalizedLandmark[]): boolean {
-    const indexUp = isFingerUp(landmarks, HandConstants.INDEX_TIP, HandConstants.INDEX_PIP);
-    const middleUp = isFingerUp(landmarks, HandConstants.MIDDLE_TIP, HandConstants.MIDDLE_PIP);
-    const ringUp = isFingerUp(landmarks, HandConstants.RING_TIP, HandConstants.RING_PIP);
-    const pinkyUp = isFingerUp(landmarks, HandConstants.PINKY_TIP, HandConstants.PINKY_PIP);
+    const indexUp = isFingerUp(landmarks, HandLandmarkIndex.indexTip, HandLandmarkIndex.indexPip);
+    const middleUp = isFingerUp(landmarks, HandLandmarkIndex.middleTip, HandLandmarkIndex.middlePip);
+    const ringUp = isFingerUp(landmarks, HandLandmarkIndex.ringTip, HandLandmarkIndex.ringPip);
+    const pinkyUp = isFingerUp(landmarks, HandLandmarkIndex.pinkyTip, HandLandmarkIndex.pinkyPip);
     // Pending thumb;
     const thumbExtended = true;
     return indexUp && middleUp && ringUp && pinkyUp && thumbExtended;
@@ -70,11 +70,11 @@ function isFingerDown(landmarks: NormalizedLandmark[], tipIndex: number, pipInde
 }
 
 function getPeaceSignIntensity(landmarks: NormalizedLandmark[]): number {
-  const indexTip = toPoint2D(landmarks[HandConstants.INDEX_TIP]);
-  const middleTip = toPoint2D(landmarks[HandConstants.MIDDLE_TIP]);
+  const indexTip = toPoint2D(landmarks[HandLandmarkIndex.indexTip]);
+  const middleTip = toPoint2D(landmarks[HandLandmarkIndex.middleTip]);
 
-  const wrist = toPoint2D(landmarks[HandConstants.WRIST]);
-  const palmCenter = toPoint2D(landmarks[HandConstants.PALM_CENTER]);
+  const wrist = toPoint2D(landmarks[HandLandmarkIndex.wrist]);
+  const palmCenter = toPoint2D(landmarks[HandLandmarkIndex.palmCenter]);
 
   const fingerDistance = distance(indexTip, middleTip);
   const handScale = distance(wrist, palmCenter);
@@ -90,11 +90,3 @@ function getPeaceSignIntensity(landmarks: NormalizedLandmark[]): number {
 
   return clamp(blurIntensity, 0, 1);
 }
-
-// function isPeaceSign(landmarks: NormalizedLandmark[]): boolean {
-//   const pinkyUp = landmarks[8].y < landmarks[6].y;
-//   const indexUp = landmarks[12].y < landmarks[10].y;
-//   const otherFingersDown = (landmarks[14].y < landmarks[16].y) &&
-//     (landmarks[18].y < landmarks[20].y) && (landmarks[2].x > landmarks[4].x);
-//   return pinkyUp && indexUp && otherFingersDown;
-// }

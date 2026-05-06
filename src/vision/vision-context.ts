@@ -1,10 +1,19 @@
-import { DrawingUtils, FilesetResolver, HandLandmarker, type NormalizedLandmark } from "@mediapipe/tasks-vision";
-import type { VisionContext } from "./hands/hand-types";
+import { DrawingUtils, FilesetResolver, HandLandmarker, PoseLandmarker } from "@mediapipe/tasks-vision";
 import { MediaPipeHandDetector } from "./hands/media-pipe-hand-detector";
+import type { HandDetector } from "./hands/hands-detector";
+import type { BodyDetector } from "./body/body-detector";
+import { MediaPipeBodyDetector } from "./body/media-pipe-body-detector";
 
+export type VisionContext = {
+  video: HTMLVideoElement;
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+  drawingUtils: DrawingUtils;
+  handDetector: HandDetector;
+  bodyDetector: BodyDetector;
+};
 
 let visionContextPromise: Promise<VisionContext> | null = null;
-let currentBlur = 0;
 
 export function getVisionContext(): Promise<VisionContext> {
   if (!visionContextPromise) visionContextPromise = createVisionContext();
@@ -37,53 +46,33 @@ async function createVisionContext(): Promise<VisionContext> {
     baseOptions: {
       modelAssetPath:
         "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+      delegate: "GPU"
     },
     numHands: 2,
     runningMode: 'VIDEO'
   });
 
-  const handDetector = new MediaPipeHandDetector(handLandmarker);
+  const bodyLandmarker = await PoseLandmarker.createFromOptions(vision, {
+    baseOptions: {
+      modelAssetPath:
+        "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task",
+      delegate: "GPU"
+    },
+    runningMode: 'VIDEO',
+    numPoses: 1,
+    minPoseDetectionConfidence: 0.5,
+    minPosePresenceConfidence: 0.5,
+    minTrackingConfidence: 0.5,
+    outputSegmentationMasks: true,
+  });
+
 
   return {
     video,
     canvas,
     ctx,
     drawingUtils: new DrawingUtils(ctx),
-    handDetector
+    handDetector: new MediaPipeHandDetector(handLandmarker),
+    bodyDetector: new MediaPipeBodyDetector(bodyLandmarker),
   };
-}
-
-export async function render() {
-  const { video, canvas, ctx, drawingUtils, handDetector } = await getVisionContext();
-
-  canvas.width = video.videoWidth || video.width;
-  canvas.height = video.videoHeight || video.height;
-
-  const handDetection = handDetector.detect(video, performance.now());
-
-  const targetBlur = handDetection.gestureIntensity * 5;
-  currentBlur += (targetBlur - currentBlur) * 0.15;
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.save();
-  ctx.filter = `blur(${currentBlur}px)`;
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-  ctx.restore();
-
-  for (const hand of handDetection.hands) {
-    drawLandmarks(drawingUtils, hand.landmarks);
-  }
-
-  requestAnimationFrame(() => {
-    void render();
-  });
-}
-
-function drawLandmarks(drawingUtils: DrawingUtils, landmarks: NormalizedLandmark[]) {
-  drawingUtils.drawConnectors(landmarks, HandLandmarker.HAND_CONNECTIONS, {
-    color: "#00FF00",
-    lineWidth: 5,
-  });
-  drawingUtils.drawLandmarks(landmarks, { color: "#FF0000", lineWidth: 2 });
 }

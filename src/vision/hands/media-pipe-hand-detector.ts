@@ -3,8 +3,8 @@ import type { HandDetector } from "./hands-detector";
 import type { DetectedHand, HandDetectionResult, HandSide } from "./hand-types";
 import { analyzeGesture, selectActiveGesture } from "./gesture-detector";
 import { toPoint2D } from "./gestures-calc";
-import { HandConstants } from "../../../public/constants/hand-constants";
 import { Gestures } from "../../types/gesture";
+import { HandLandmarkIndex } from "../../constants/hand-constants";
 
 type MediaPipeHandDetectorOptions = {
     minGestureIntensity?: number;
@@ -40,8 +40,8 @@ export class MediaPipeHandDetector implements HandDetector {
                 score: readHandScore(result, index),
                 gesture: gestureAnalysis.gesture,
                 gestureIntensity: gestureAnalysis.intensity >= this.minGestureIntensity ? gestureAnalysis.intensity : 0,
-                indexTip: toPoint2D(landmarks[HandConstants.INDEX_TIP]),
-                middleTip: toPoint2D(landmarks[HandConstants.MIDDLE_TIP])
+                indexTip: toPoint2D(landmarks[HandLandmarkIndex.indexTip]),
+                middleTip: toPoint2D(landmarks[HandLandmarkIndex.middleTip])
             };
         });
 
