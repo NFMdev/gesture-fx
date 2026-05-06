@@ -31,11 +31,3 @@ export type HandDetectionResult = {
     primaryHand: DetectedHand | null;
     hasHands: boolean;
 }
-
-export type VisionContext = {
-  video: HTMLVideoElement;
-  canvas: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D;
-  drawingUtils: DrawingUtils;
-  handDetector: HandDetector;
-};
