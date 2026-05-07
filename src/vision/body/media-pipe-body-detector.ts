@@ -1,4 +1,4 @@
-import type { Landmark, NormalizedLandmark, PoseLandmarker } from "@mediapipe/tasks-vision";
+import type { Landmark, MPMask, NormalizedLandmark, PoseLandmarker } from "@mediapipe/tasks-vision";
 import type { BodyDetector } from "./body-detector";
 import type { BodyDetectionResult, DetectedBody } from "./body-types";
 import { computeBodyBounds, computeBodyConfidence, getBoundsArea } from "./body-calc";
@@ -18,25 +18,19 @@ export class MediaPipeBodyDetector implements BodyDetector {
         const bodyLandmarks = result.landmarks ?? [];
         const worldLandmarks = result.worldLandmarks ?? [];
 
-        if (bodyLandmarks.length === 0) {
-            closeSegmentationMask(result);
-            return emptyBodyDetectionResult();
-        }
-
         const bodies: DetectedBody[] = bodyLandmarks.map((landmarks, index) => {
             const world = worldLandmarks[index] ?? null;
-            
             return createBody(landmarks, world);
         });
         const primaryBody = selectPrimaryBody(bodies);
-        
-        const segmentationMasks = readSegmentationMasks(result);
+        const segmentationMask = readPrimarySegmentationMask(result);
 
         return {
             bodies,
             primaryBody,
-            segmentationMasks,
+            segmentationMask,
             hasBody: bodies.length > 0,
+            hasSegmenntationMask: segmentationMask !== null,
         };
     }
 }
@@ -77,8 +71,9 @@ function emptyBodyDetectionResult(): BodyDetectionResult {
     return {
         bodies: [],
         primaryBody: null,
-        segmentationMasks: [],
+        segmentationMask: null,
         hasBody: false,
+        hasSegmenntationMask: false,
     };
 }
 
@@ -90,23 +85,6 @@ function isVideoReady(video: HTMLVideoElement): boolean {
     );
 }
 
-function readSegmentationMasks(result: unknown): unknown[] {
-    if (!isObject(result)) return [];
-
-    const masks = result['segmentationMasks'];
-    return Array.isArray(masks) ? masks : [];
-}
-
-function closeSegmentationMask(result: unknown): void {
-    const masks = readSegmentationMasks(result);
-
-    for (const mask of masks) {
-        if (isObject(mask) && typeof mask['close'] === 'function') {
-            mask['close']();
-        }
-    }
-}
-
-function isObject(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
+function readPrimarySegmentationMask(result: { segmentationMasks?: MPMask[]  }): MPMask | null {
+    return result.segmentationMasks?.[0] ?? null;
 }

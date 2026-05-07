@@ -7,7 +7,7 @@ export function detectVisionFrame(
 ): VisionFrame {
     return {
         timestamp,
-        body: context.bodyDetector.detect(context.video, timestamp),
-        hands: context.handDetector.detect(context.video, timestamp)
+        bodyResult: context.bodyDetector.detect(context.video, timestamp),
+        handsResult: context.handDetector.detect(context.video, timestamp)
     };
 }

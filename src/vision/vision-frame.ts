@@ -3,6 +3,6 @@ import type { HandDetectionResult } from "./hands/hand-types"
 
 export type VisionFrame = {
     timestamp: number,
-    body: BodyDetectionResult,
-    hands: HandDetectionResult,
+    bodyResult: BodyDetectionResult,
+    handsResult: HandDetectionResult,
 };

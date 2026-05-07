@@ -1,9 +1,15 @@
+import { BodyMaskRender } from "../body/body-mask-render";
 import { detectVisionFrame } from "../detect-vision-frame";
 import { getVisionContext } from "../vision-context";
 import { drawBodyDebug } from "./draw-body-debug";
 import { drawHandsDebug } from "./draw-hands-debug";
 
 let currentBlur = 0;
+
+const bodyMaskRender = new BodyMaskRender({
+  threshold: 0.45,
+  alpha: 0.75,
+});
 
 export async function render() {
   const context = await getVisionContext();
@@ -14,7 +20,7 @@ export async function render() {
   const timestamp = performance.now();
   const frame = detectVisionFrame(context, timestamp);
 
-  const targetBlur = frame.hands.gestureIntensity * 5;
+  const targetBlur = frame.handsResult.gestureIntensity * 5;
   currentBlur += (targetBlur - currentBlur) * 0.15;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -24,8 +30,17 @@ export async function render() {
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   ctx.restore();
 
-  drawBodyDebug(drawingUtils, frame.body);
-  drawHandsDebug(drawingUtils, frame.hands);
+  if (frame.bodyResult.segmentationMask) {
+    bodyMaskRender.drawMaskOverlay(
+      ctx,
+      frame.bodyResult.segmentationMask,
+      canvas.width,
+      canvas.height
+    );
+  }
+
+  drawBodyDebug(drawingUtils, frame.bodyResult);
+  drawHandsDebug(drawingUtils, frame.handsResult);
 
   requestAnimationFrame(() => {
     void render();

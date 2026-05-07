@@ -1,4 +1,4 @@
-import type { Landmark, NormalizedLandmark } from "@mediapipe/tasks-vision";
+import type { Landmark, MPMask, NormalizedLandmark } from "@mediapipe/tasks-vision";
 
 export type BodyBounds = {
     xMin: number;
@@ -21,6 +21,7 @@ export type DetectedBody = {
 export type BodyDetectionResult = {
     bodies: DetectedBody[];
     primaryBody: DetectedBody | null;
-    segmentationMasks: unknown[]; // unkown for initial phase, will be updated
+    segmentationMask: MPMask | null;
     hasBody: boolean;
+    hasSegmenntationMask: boolean;
 };
