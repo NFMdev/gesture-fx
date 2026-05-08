@@ -1,5 +1,5 @@
 import { HandLandmarker, type DrawingUtils } from "@mediapipe/tasks-vision";
-import type { HandDetectionResult } from "../hands/hand-types";
+import type { HandDetectionResult } from "../vision/hands/hand-types";
 
 export function drawHandsDebug(
     drawingUtils: DrawingUtils,

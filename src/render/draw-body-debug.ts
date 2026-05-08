@@ -1,5 +1,5 @@
 import { PoseLandmarker, type DrawingUtils } from "@mediapipe/tasks-vision";
-import type { BodyDetectionResult } from "../body/body-types";
+import type { BodyDetectionResult } from "../vision/body/body-types";
 
 export function drawBodyDebug(
     drawingUtils: DrawingUtils,

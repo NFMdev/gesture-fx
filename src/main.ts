@@ -3,7 +3,7 @@ import typescriptLogo from './assets/typescript.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import { cameraStop, captureCamera } from './vision/camera'
-import { render } from './vision/render/render'
+import { render } from './render/render'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 <section id="center">
